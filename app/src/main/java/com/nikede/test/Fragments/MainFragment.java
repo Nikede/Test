@@ -45,6 +45,8 @@ public class MainFragment extends Fragment {
     List<CreditByPartner> creditsByPartner;
     List<DebitByPartner> debitsByPartner;
     private static final String TAG = "MainFragment";
+    boolean exception = false;
+    String exceptionText = "";
 
     @Nullable
     @Override
@@ -113,7 +115,10 @@ public class MainFragment extends Fragment {
             }
         });
 
-        new FetchItemsTask().execute();
+        if (creditsByPartner.size() == 0 && debitsByPartner.size() == 0)
+            new FetchItemsTask().execute();
+
+        updateUI(chartCreditByPartner, chartDebitByPartner, creditsByPartner, debitsByPartner);
 
         return view;
     }
@@ -170,16 +175,23 @@ public class MainFragment extends Fragment {
 
             } catch (IOException ioe) {
                 Log.e(TAG, "Failed to fetch URL: ", ioe);
-                Toast.makeText(getActivity().getApplicationContext(), "Failed to fetch URL", Toast.LENGTH_SHORT).show();
+                exception = true;
+                exceptionText = "Failed to fetch URL";
             } catch (JSONException je){
                 Log.e(TAG, "Failed to parse JSON", je);
-                Toast.makeText(getActivity().getApplicationContext(), "Failed to parse JSON", Toast.LENGTH_SHORT).show();
+                exception = true;
+                exceptionText = "Failed to parse JSON";
             }
             return null;
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
+            if (exception) {
+                Toast.makeText(getActivity().getApplicationContext(), exceptionText, Toast.LENGTH_SHORT).show();
+                exception = false;
+                return;
+            }
             creditsByPartner = CreditLab.get(getActivity().getApplicationContext()).getCreditsByPartner();
             debitsByPartner = DebitLab.get(getActivity().getApplicationContext()).getDebitsByPartner();
             updateUI(chartCreditByPartner, chartDebitByPartner, creditsByPartner, debitsByPartner);

@@ -58,6 +58,8 @@ public class DebitFragment extends Fragment {
     List<DebitByDate> debitsByDate;
     List<DebitByPartner> debitsByPartner;
     private static final String TAG = "DebitFragment";
+    boolean exception = false;
+    String exceptionText = "";
 
     @Nullable
     @Override
@@ -298,16 +300,23 @@ public class DebitFragment extends Fragment {
 
             } catch (IOException ioe) {
                 Log.e(TAG, "Failed to fetch URL: ", ioe);
-                Toast.makeText(getActivity().getApplicationContext(), "Failed to fetch URL", Toast.LENGTH_SHORT).show();
+                exception = true;
+                exceptionText = "Failed to fetch URL";
             } catch (JSONException je){
                 Log.e(TAG, "Failed to parse JSON", je);
-                Toast.makeText(getActivity().getApplicationContext(), "Failed to parse JSON", Toast.LENGTH_SHORT).show();
+                exception = true;
+                exceptionText = "Failed to parse JSON";
             }
             return null;
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
+            if (exception) {
+                Toast.makeText(getActivity().getApplicationContext(), exceptionText, Toast.LENGTH_SHORT).show();
+                exception = false;
+                return;
+            }
             debitsByDate = DebitLab.get(getActivity().getApplicationContext()).getDebitsByDate();
             debitsByPartner = DebitLab.get(getActivity().getApplicationContext()).getDebitsByPartner();
             drawTables(tableByDate, tableByPartner, debitsByDate, debitsByPartner);

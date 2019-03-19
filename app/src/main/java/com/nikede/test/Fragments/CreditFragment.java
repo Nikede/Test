@@ -58,6 +58,8 @@ public class CreditFragment extends Fragment {
     List<CreditByDate> creditsByDate;
     List<CreditByPartner> creditsByPartner;
     private static final String TAG = "CreditFragment";
+    boolean exception = false;
+    String exceptionText = "";
 
     @Nullable
     @Override
@@ -292,16 +294,23 @@ public class CreditFragment extends Fragment {
 
             } catch (IOException ioe) {
                 Log.e(TAG, "Failed to fetch URL: ", ioe);
-                Toast.makeText(getActivity().getApplicationContext(), "Failed to fetch URL", Toast.LENGTH_SHORT).show();
+                exception = true;
+                exceptionText = "Failed to fetch URL";
             } catch (JSONException je){
                 Log.e(TAG, "Failed to parse JSON", je);
-                Toast.makeText(getActivity().getApplicationContext(), "Failed to parse JSON", Toast.LENGTH_SHORT).show();
+                exception = true;
+                exceptionText = "Failed to parse JSON";
             }
             return null;
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
+            if (exception) {
+                Toast.makeText(getActivity().getApplicationContext(), exceptionText, Toast.LENGTH_SHORT).show();
+                exception = false;
+                return;
+            }
             creditsByDate = CreditLab.get(getContext().getApplicationContext()).getCreditsByDate();
             creditsByPartner = CreditLab.get(getContext().getApplicationContext()).getCreditsByPartner();
             drawTables(tableByDate, tableByPartner, creditsByDate, creditsByPartner);
