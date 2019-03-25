@@ -11,6 +11,7 @@ import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -53,6 +54,7 @@ public class DebitFragment extends Fragment {
 
     TableLayout tableByDate;
     TableLayout tableByPartner;
+    TableLayout tableSingleEntry;
     LineChart chartByDate;
     PieChart chartByPartner;
     List<DebitByDate> debitsByDate;
@@ -61,6 +63,12 @@ public class DebitFragment extends Fragment {
     boolean exception = false;
     String exceptionText = "";
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -68,6 +76,7 @@ public class DebitFragment extends Fragment {
 
         tableByDate = (TableLayout) view.findViewById(R.id.tableDebitByDate);
         tableByPartner = (TableLayout) view.findViewById(R.id.tableDebitByPartner);
+        tableSingleEntry = (TableLayout) view.findViewById(R.id.tableSingleEntry);
         chartByDate = (LineChart) view.findViewById(R.id.chartByDate);
         chartByPartner = (PieChart) view.findViewById(R.id.chartByPartner);
         debitsByDate = DebitLab.get(getActivity().getApplicationContext()).getDebitsByDate();
@@ -76,48 +85,60 @@ public class DebitFragment extends Fragment {
         chartByDate.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
             @Override
             public void onValueSelected(Entry e, Highlight h) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder.setTitle("Дебит")
-                        .setMessage("На дату: " + ((DebitByDate) e.getData()).getDate().toString() +
-                                "  сумма - " + (Double.toString(((DebitByDate) e.getData()).getSum())))
-                        .setCancelable(false)
-                        .setNegativeButton("ОК",
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
-                                        dialog.cancel();
-                                    }
-                                });
-                AlertDialog alert = builder.create();
-                alert.show();
+                tableSingleEntry.removeAllViewsInLayout();
+                TableRow tableRow = new TableRow(getActivity().getApplicationContext());
+                TextView sum = new TextView(getActivity().getApplicationContext());
+                sum.setText(Double.toString(Math.round(((DebitByDate) e.getData()).getSum())));
+                sum.setBackground(getResources().getDrawable(R.drawable.border));
+                sum.setGravity(Gravity.CENTER_HORIZONTAL);
+                sum.setTextColor(0xff000000);
+                sum.setPadding(5, 5, 5, 5);
+                TextView date = new TextView(getActivity().getApplicationContext());
+                date.setText(new SimpleDateFormat("dd-MM-yyyy").format(((DebitByDate) e.getData()).getDate()));
+                date.setBackground(getResources().getDrawable(R.drawable.border));
+                date.setGravity(Gravity.CENTER_HORIZONTAL);
+                date.setTextColor(0xff000000);
+                date.setPadding(5, 5, 5, 5);
+                tableRow.addView(sum);
+                tableRow.addView(date);
+                tableRow.setGravity(Gravity.CENTER_HORIZONTAL);
+                tableSingleEntry.addView(tableRow);
+                tableSingleEntry.setVisibility(View.VISIBLE);
             }
 
             @Override
             public void onNothingSelected() {
-
+                tableSingleEntry.setVisibility(View.GONE);
             }
         });
 
         chartByPartner.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
             @Override
             public void onValueSelected(Entry e, Highlight h) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder.setTitle("Дебит")
-                        .setMessage("На на партнёра: " + ((DebitByPartner) e.getData()).getPartner() +
-                                "  сумма - " + (Double.toString(((DebitByPartner) e.getData()).getSum())))
-                        .setCancelable(false)
-                        .setNegativeButton("ОК",
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
-                                        dialog.cancel();
-                                    }
-                                });
-                AlertDialog alert = builder.create();
-                alert.show();
+                tableSingleEntry.removeAllViewsInLayout();
+                TableRow tableRow = new TableRow(getActivity().getApplicationContext());
+                TextView sum = new TextView(getActivity().getApplicationContext());
+                sum.setText(Double.toString(Math.round(((DebitByPartner) e.getData()).getSum())));
+                sum.setBackground(getResources().getDrawable(R.drawable.border));
+                sum.setGravity(Gravity.CENTER_HORIZONTAL);
+                sum.setTextColor(0xff000000);
+                sum.setPadding(5, 5, 5, 5);
+                TextView partner = new TextView(getActivity().getApplicationContext());
+                partner.setText(((DebitByPartner) e.getData()).getPartner());
+                partner.setBackground(getResources().getDrawable(R.drawable.border));
+                partner.setGravity(Gravity.CENTER_HORIZONTAL);
+                partner.setTextColor(0xff000000);
+                partner.setPadding(5, 5, 5, 5);
+                tableRow.addView(sum);
+                tableRow.addView(partner);
+                tableRow.setGravity(Gravity.CENTER_HORIZONTAL);
+                tableSingleEntry.addView(tableRow);
+                tableSingleEntry.setVisibility(View.VISIBLE);
             }
 
             @Override
             public void onNothingSelected() {
-
+                tableSingleEntry.setVisibility(View.GONE);
             }
         });
 
@@ -134,14 +155,6 @@ public class DebitFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 drawTables(tableByDate, tableByPartner, debitsByDate, debitsByPartner);
-            }
-        });
-
-        Button resetButton = (Button) view.findViewById(R.id.Reset);
-        resetButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new FetchItemsTask().execute();
             }
         });
 
@@ -170,12 +183,13 @@ public class DebitFragment extends Fragment {
         dataSet.setHighlightEnabled(true);
         dataSet.setDrawHighlightIndicators(true);
         dataSet.setHighLightColor(Color.BLACK);
+        dataSet.setDrawValues(false);
         LineData lineData = new LineData(dataSet);
         chartByDate.setData(lineData);
         IAxisValueFormatter formatter = new IAxisValueFormatter() {
             @Override
             public String getFormattedValue(float value, AxisBase axis) {
-                return new SimpleDateFormat("dd-MM-yyyy").format(new Date((long) value));
+                return new SimpleDateFormat("dd-MM").format(new Date((long) value));
             }
         };
 
@@ -202,6 +216,7 @@ public class DebitFragment extends Fragment {
         chartByPartner.setDrawHoleEnabled(true);
         chartByPartner.setHoleColor(Color.WHITE);
         chartByPartner.setTransparentCircleRadius(60f);
+        chartByPartner.setEntryLabelColor(Color.BLACK);
         chartByPartner.invalidate();
 
         chartByPartner.setVisibility(View.VISIBLE);
@@ -217,11 +232,15 @@ public class DebitFragment extends Fragment {
         TableRow tableRow = new TableRow(getActivity().getApplicationContext());
         TextView sum = new TextView(getActivity().getApplicationContext());
         sum.setText("Сумма");
+        sum.setTextSize(20);
+        sum.setBackground(getResources().getDrawable(R.drawable.border));
         sum.setGravity(Gravity.CENTER_HORIZONTAL);
         sum.setTextColor(0xff000000);
         sum.setPadding(5, 5, 5, 5);
         TextView date = new TextView(getActivity().getApplicationContext());
         date.setText("Дата");
+        date.setTextSize(20);
+        date.setBackground(getResources().getDrawable(R.drawable.border));
         date.setGravity(Gravity.CENTER_HORIZONTAL);
         date.setTextColor(0xff000000);
         date.setPadding(5, 5, 5, 5);
@@ -234,11 +253,13 @@ public class DebitFragment extends Fragment {
             tableRow = new TableRow(getActivity().getApplicationContext());
             sum = new TextView(getActivity().getApplicationContext());
             sum.setText(Double.toString(Math.round(debitByDate.getSum())));
+            sum.setBackground(getResources().getDrawable(R.drawable.border));
             sum.setGravity(Gravity.CENTER_HORIZONTAL);
             sum.setTextColor(0xff000000);
             sum.setPadding(5, 5, 5, 5);
             date = new TextView(getActivity().getApplicationContext());
-            date.setText(debitByDate.getDate().toString());
+            date.setText(new SimpleDateFormat("dd-MM-yyyy").format(debitByDate.getDate()));
+            date.setBackground(getResources().getDrawable(R.drawable.border));
             date.setGravity(Gravity.CENTER_HORIZONTAL);
             date.setTextColor(0xff000000);
             date.setPadding(5, 5, 5, 5);
@@ -251,11 +272,15 @@ public class DebitFragment extends Fragment {
         tableRow = new TableRow(getActivity().getApplicationContext());
         sum = new TextView(getActivity().getApplicationContext());
         sum.setText("Сумма");
+        sum.setTextSize(20);
+        sum.setBackground(getResources().getDrawable(R.drawable.border));
         sum.setGravity(Gravity.CENTER_HORIZONTAL);
         sum.setTextColor(0xff000000);
         sum.setPadding(5, 5, 5, 5);
         TextView partner = new TextView(getActivity().getApplicationContext());
         partner.setText("Партнёр");
+        partner.setTextSize(20);
+        partner.setBackground(getResources().getDrawable(R.drawable.border));
         partner.setGravity(Gravity.CENTER_HORIZONTAL);
         partner.setTextColor(0xff000000);
         partner.setPadding(5, 5, 5, 5);
@@ -268,11 +293,13 @@ public class DebitFragment extends Fragment {
             tableRow = new TableRow(getActivity().getApplicationContext());
             sum = new TextView(getActivity().getApplicationContext());
             sum.setText(Double.toString(Math.round(debitByPartner.getSum())));
+            sum.setBackground(getResources().getDrawable(R.drawable.border));
             sum.setGravity(Gravity.CENTER_HORIZONTAL);
             sum.setTextColor(0xff000000);
             sum.setPadding(5, 5, 5, 5);
             partner = new TextView(getActivity().getApplicationContext());
             partner.setText(debitByPartner.getPartner());
+            partner.setBackground(getResources().getDrawable(R.drawable.border));
             partner.setGravity(Gravity.CENTER_HORIZONTAL);
             partner.setTextColor(0xff000000);
             partner.setPadding(5, 5, 5, 5);
@@ -320,6 +347,19 @@ public class DebitFragment extends Fragment {
             debitsByDate = DebitLab.get(getActivity().getApplicationContext()).getDebitsByDate();
             debitsByPartner = DebitLab.get(getActivity().getApplicationContext()).getDebitsByPartner();
             drawTables(tableByDate, tableByPartner, debitsByDate, debitsByPartner);
+            Toast.makeText(getActivity().getApplicationContext(), "Данные обновлены", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.Reset: {
+                new FetchItemsTask().execute();
+                return true;
+            }
+            default:
+                return false;
         }
     }
 }

@@ -14,19 +14,13 @@
             android:id="@+id/table"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Таблица" />
+            android:text="@string/table" />
 
         <Button
             android:id="@+id/graph"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="График" />
-
-        <Button
-            android:id="@+id/Reset"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Обновить" />
+            android:text="@string/chart" />
 
     </LinearLayout>
 
@@ -54,7 +48,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:stretchColumns="*">
+                android:stretchColumns="*"
+                android:layout_marginTop="15dp">
 
             </TableLayout>
 
@@ -63,6 +58,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="250dp"
                 android:visibility="gone"/>
+
+            <TableLayout
+                android:id="@+id/tableSingleEntry"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginBottom="4dp"
+                android:stretchColumns="*">
+
+            </TableLayout>
 
             <com.github.mikephil.charting.charts.PieChart
                 android:id="@+id/chartByPartner"

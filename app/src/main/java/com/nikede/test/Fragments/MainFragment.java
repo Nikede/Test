@@ -6,14 +6,17 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.data.Entry;
@@ -48,6 +51,12 @@ public class MainFragment extends Fragment {
     boolean exception = false;
     String exceptionText = "";
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -59,30 +68,12 @@ public class MainFragment extends Fragment {
         debitsByPartner = DebitLab.get(getActivity().getApplicationContext()).getDebitsByPartner();
 
 
-        Button resetButton = (Button) view.findViewById(R.id.Reset);
-        resetButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new FetchItemsTask().execute();
-            }
-        });
-
         chartCreditByPartner.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
             @Override
             public void onValueSelected(Entry e, Highlight h) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder.setTitle("Дебит")
-                        .setMessage("На на партнёра: " + ((CreditByPartner) e.getData()).getPartner() +
-                                "  сумма - " + (Double.toString(((CreditByPartner) e.getData()).getSum())))
-                        .setCancelable(false)
-                        .setNegativeButton("ОК",
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
-                                        dialog.cancel();
-                                    }
-                                });
-                AlertDialog alert = builder.create();
-                alert.show();
+                TabLayout tabLayout = (TabLayout) getActivity().findViewById(R.id.tab_layout);
+                TabLayout.Tab tab = tabLayout.getTabAt(1);
+                tab.select();
             }
 
             @Override
@@ -94,19 +85,9 @@ public class MainFragment extends Fragment {
         chartDebitByPartner.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
             @Override
             public void onValueSelected(Entry e, Highlight h) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder.setTitle("Дебит")
-                        .setMessage("На на партнёра: " + ((DebitByPartner) e.getData()).getPartner() +
-                                "  сумма - " + (Double.toString(((DebitByPartner) e.getData()).getSum())))
-                        .setCancelable(false)
-                        .setNegativeButton("ОК",
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
-                                        dialog.cancel();
-                                    }
-                                });
-                AlertDialog alert = builder.create();
-                alert.show();
+                TabLayout tabLayout = (TabLayout) getActivity().findViewById(R.id.tab_layout);
+                TabLayout.Tab tab = tabLayout.getTabAt(2);
+                tab.select();
             }
 
             @Override
@@ -117,8 +98,8 @@ public class MainFragment extends Fragment {
 
         if (creditsByPartner.size() == 0 && debitsByPartner.size() == 0)
             new FetchItemsTask().execute();
-
-        updateUI(chartCreditByPartner, chartDebitByPartner, creditsByPartner, debitsByPartner);
+        else
+            updateUI(chartCreditByPartner, chartDebitByPartner, creditsByPartner, debitsByPartner);
 
         return view;
     }
@@ -141,6 +122,7 @@ public class MainFragment extends Fragment {
         chartDebitByPartner.setDrawHoleEnabled(true);
         chartDebitByPartner.setHoleColor(Color.WHITE);
         chartDebitByPartner.setTransparentCircleRadius(60f);
+        chartDebitByPartner.setEntryLabelColor(Color.BLACK);
         chartDebitByPartner.invalidate();
 
         List<PieEntry> pieEntries1 = new ArrayList<>();
@@ -160,10 +142,11 @@ public class MainFragment extends Fragment {
         chartCreditByPartner.setDrawHoleEnabled(true);
         chartCreditByPartner.setHoleColor(Color.WHITE);
         chartCreditByPartner.setTransparentCircleRadius(60f);
+        chartCreditByPartner.setEntryLabelColor(Color.BLACK);
         chartCreditByPartner.invalidate();
     }
 
-    private class FetchItemsTask extends AsyncTask<Void,Void,Void> {
+    private class FetchItemsTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
             try {
@@ -177,7 +160,7 @@ public class MainFragment extends Fragment {
                 Log.e(TAG, "Failed to fetch URL: ", ioe);
                 exception = true;
                 exceptionText = "Failed to fetch URL";
-            } catch (JSONException je){
+            } catch (JSONException je) {
                 Log.e(TAG, "Failed to parse JSON", je);
                 exception = true;
                 exceptionText = "Failed to parse JSON";
@@ -195,6 +178,25 @@ public class MainFragment extends Fragment {
             creditsByPartner = CreditLab.get(getActivity().getApplicationContext()).getCreditsByPartner();
             debitsByPartner = DebitLab.get(getActivity().getApplicationContext()).getDebitsByPartner();
             updateUI(chartCreditByPartner, chartDebitByPartner, creditsByPartner, debitsByPartner);
+            Toast.makeText(getActivity().getApplicationContext(), "Данные обновлены", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.Reset: {
+                new FetchItemsTask().execute();
+                return true;
+            }
+            default:
+                return false;
         }
     }
 }

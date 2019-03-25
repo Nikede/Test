@@ -11,6 +11,7 @@ import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -53,6 +54,7 @@ public class CreditFragment extends Fragment {
 
     TableLayout tableByDate;
     TableLayout tableByPartner;
+    TableLayout tableSingleEntry;
     LineChart chartByDate;
     PieChart chartByPartner;
     List<CreditByDate> creditsByDate;
@@ -61,6 +63,12 @@ public class CreditFragment extends Fragment {
     boolean exception = false;
     String exceptionText = "";
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -68,6 +76,7 @@ public class CreditFragment extends Fragment {
 
         tableByDate = (TableLayout) view.findViewById(R.id.tableDebitByDate);
         tableByPartner = (TableLayout) view.findViewById(R.id.tableDebitByPartner);
+        tableSingleEntry = (TableLayout) view.findViewById(R.id.tableSingleEntry);
         chartByDate = (LineChart) view.findViewById(R.id.chartByDate);
         chartByPartner = (PieChart) view.findViewById(R.id.chartByPartner);
         creditsByDate = CreditLab.get(getActivity().getApplicationContext()).getCreditsByDate();
@@ -76,48 +85,60 @@ public class CreditFragment extends Fragment {
         chartByDate.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
             @Override
             public void onValueSelected(Entry e, Highlight h) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder.setTitle("Дебит")
-                        .setMessage("На дату: " + ((CreditByDate) e.getData()).getDate().toString() +
-                                "  сумма - " + (Double.toString(((CreditByDate) e.getData()).getSum())))
-                        .setCancelable(false)
-                        .setNegativeButton("ОК",
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
-                                        dialog.cancel();
-                                    }
-                                });
-                AlertDialog alert = builder.create();
-                alert.show();
+                tableSingleEntry.removeAllViewsInLayout();
+                TableRow tableRow = new TableRow(getActivity().getApplicationContext());
+                TextView sum = new TextView(getActivity().getApplicationContext());
+                sum.setText(Double.toString(Math.round(((CreditByDate) e.getData()).getSum())));
+                sum.setBackground(getResources().getDrawable(R.drawable.border));
+                sum.setGravity(Gravity.CENTER_HORIZONTAL);
+                sum.setTextColor(0xff000000);
+                sum.setPadding(5, 5, 5, 5);
+                TextView date = new TextView(getActivity().getApplicationContext());
+                date.setText(new SimpleDateFormat("dd-MM-yyyy").format(((CreditByDate) e.getData()).getDate()));
+                date.setBackground(getResources().getDrawable(R.drawable.border));
+                date.setGravity(Gravity.CENTER_HORIZONTAL);
+                date.setTextColor(0xff000000);
+                date.setPadding(5, 5, 5, 5);
+                tableRow.addView(sum);
+                tableRow.addView(date);
+                tableRow.setGravity(Gravity.CENTER_HORIZONTAL);
+                tableSingleEntry.addView(tableRow);
+                tableSingleEntry.setVisibility(View.VISIBLE);
             }
 
             @Override
             public void onNothingSelected() {
-
+                tableSingleEntry.setVisibility(View.GONE);
             }
         });
 
         chartByPartner.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
             @Override
             public void onValueSelected(Entry e, Highlight h) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder.setTitle("Дебит")
-                        .setMessage("На на партнёра: " + ((CreditByPartner) e.getData()).getPartner() +
-                                "  сумма - " + (Double.toString(((CreditByPartner) e.getData()).getSum())))
-                        .setCancelable(false)
-                        .setNegativeButton("ОК",
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
-                                        dialog.cancel();
-                                    }
-                                });
-                AlertDialog alert = builder.create();
-                alert.show();
+                tableSingleEntry.removeAllViewsInLayout();
+                TableRow tableRow = new TableRow(getActivity().getApplicationContext());
+                TextView sum = new TextView(getActivity().getApplicationContext());
+                sum.setText(Double.toString(Math.round(((CreditByPartner) e.getData()).getSum())));
+                sum.setBackground(getResources().getDrawable(R.drawable.border));
+                sum.setGravity(Gravity.CENTER_HORIZONTAL);
+                sum.setTextColor(0xff000000);
+                sum.setPadding(5, 5, 5, 5);
+                TextView partner = new TextView(getActivity().getApplicationContext());
+                partner.setText(((CreditByPartner) e.getData()).getPartner());
+                partner.setBackground(getResources().getDrawable(R.drawable.border));
+                partner.setGravity(Gravity.CENTER_HORIZONTAL);
+                partner.setTextColor(0xff000000);
+                partner.setPadding(5, 5, 5, 5);
+                tableRow.addView(sum);
+                tableRow.addView(partner);
+                tableRow.setGravity(Gravity.CENTER_HORIZONTAL);
+                tableSingleEntry.addView(tableRow);
+                tableSingleEntry.setVisibility(View.VISIBLE);
             }
 
             @Override
             public void onNothingSelected() {
-
+                tableSingleEntry.setVisibility(View.GONE);
             }
         });
 
@@ -134,14 +155,6 @@ public class CreditFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 drawTables(tableByDate, tableByPartner, creditsByDate, creditsByPartner);
-            }
-        });
-
-        Button resetButton = (Button) view.findViewById(R.id.Reset);
-        resetButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new FetchItemsTask().execute();
             }
         });
 
@@ -164,12 +177,13 @@ public class CreditFragment extends Fragment {
         dataSet.setHighlightEnabled(true);
         dataSet.setDrawHighlightIndicators(true);
         dataSet.setHighLightColor(Color.BLACK);
+        dataSet.setDrawValues(false);
         LineData lineData = new LineData(dataSet);
         chartByDate.setData(lineData);
         IAxisValueFormatter formatter = new IAxisValueFormatter() {
             @Override
             public String getFormattedValue(float value, AxisBase axis) {
-                return new SimpleDateFormat("dd-MM-yyyy").format(new Date((long) value));
+                return new SimpleDateFormat("dd-MM").format(new Date((long) value));
             }
         };
 
@@ -196,7 +210,8 @@ public class CreditFragment extends Fragment {
         chartByPartner.setDrawHoleEnabled(true);
         chartByPartner.setHoleColor(Color.WHITE);
         chartByPartner.setTransparentCircleRadius(60f);
-        chartByDate.invalidate();
+        chartByPartner.setEntryLabelColor(Color.BLACK);
+        chartByPartner.invalidate();
 
         chartByPartner.setVisibility(View.VISIBLE);
         chartByDate.setVisibility(View.VISIBLE);
@@ -211,11 +226,15 @@ public class CreditFragment extends Fragment {
         TableRow tableRow = new TableRow(getActivity().getApplicationContext());
         TextView sum = new TextView(getActivity().getApplicationContext());
         sum.setText("Сумма");
+        sum.setTextSize(20);
+        sum.setBackground(getResources().getDrawable(R.drawable.border));
         sum.setGravity(Gravity.CENTER_HORIZONTAL);
         sum.setTextColor(0xff000000);
         sum.setPadding(5, 5, 5, 5);
         TextView date = new TextView(getActivity().getApplicationContext());
         date.setText("Дата");
+        date.setTextSize(20);
+        date.setBackground(getResources().getDrawable(R.drawable.border));
         date.setGravity(Gravity.CENTER_HORIZONTAL);
         date.setTextColor(0xff000000);
         date.setPadding(5, 5, 5, 5);
@@ -228,11 +247,13 @@ public class CreditFragment extends Fragment {
             tableRow = new TableRow(getActivity().getApplicationContext());
             sum = new TextView(getActivity().getApplicationContext());
             sum.setText(Double.toString(Math.round(creditByDate.getSum())));
+            sum.setBackground(getResources().getDrawable(R.drawable.border));
             sum.setGravity(Gravity.CENTER_HORIZONTAL);
             sum.setTextColor(0xff000000);
             sum.setPadding(5, 5, 5, 5);
             date = new TextView(getActivity().getApplicationContext());
-            date.setText(creditByDate.getDate().toString());
+            date.setText(new SimpleDateFormat("dd-MM-yyyy").format(creditByDate.getDate()));
+            date.setBackground(getResources().getDrawable(R.drawable.border));
             date.setGravity(Gravity.CENTER_HORIZONTAL);
             date.setTextColor(0xff000000);
             date.setPadding(5, 5, 5, 5);
@@ -245,11 +266,15 @@ public class CreditFragment extends Fragment {
         tableRow = new TableRow(getActivity().getApplicationContext());
         sum = new TextView(getActivity().getApplicationContext());
         sum.setText("Сумма");
+        sum.setTextSize(20);
+        sum.setBackground(getResources().getDrawable(R.drawable.border));
         sum.setGravity(Gravity.CENTER_HORIZONTAL);
         sum.setTextColor(0xff000000);
         sum.setPadding(5, 5, 5, 5);
         TextView partner = new TextView(getActivity().getApplicationContext());
         partner.setText("Партнёр");
+        partner.setTextSize(20);
+        partner.setBackground(getResources().getDrawable(R.drawable.border));
         partner.setGravity(Gravity.CENTER_HORIZONTAL);
         partner.setTextColor(0xff000000);
         partner.setPadding(5, 5, 5, 5);
@@ -262,10 +287,12 @@ public class CreditFragment extends Fragment {
             tableRow = new TableRow(getActivity().getApplicationContext());
             sum = new TextView(getActivity().getApplicationContext());
             sum.setText(Double.toString(Math.round(creditByPartner.getSum())));
+            sum.setBackground(getResources().getDrawable(R.drawable.border));
             sum.setGravity(Gravity.CENTER_HORIZONTAL);
             sum.setTextColor(0xff000000);
             sum.setPadding(5, 5, 5, 5);
             partner = new TextView(getActivity().getApplicationContext());
+            partner.setBackground(getResources().getDrawable(R.drawable.border));
             partner.setText(creditByPartner.getPartner());
             partner.setGravity(Gravity.CENTER_HORIZONTAL);
             partner.setTextColor(0xff000000);
@@ -314,6 +341,19 @@ public class CreditFragment extends Fragment {
             creditsByDate = CreditLab.get(getContext().getApplicationContext()).getCreditsByDate();
             creditsByPartner = CreditLab.get(getContext().getApplicationContext()).getCreditsByPartner();
             drawTables(tableByDate, tableByPartner, creditsByDate, creditsByPartner);
+            Toast.makeText(getActivity().getApplicationContext(), "Данные обновлены", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.Reset: {
+                new FetchItemsTask().execute();
+                return true;
+            }
+            default:
+                return false;
         }
     }
 }

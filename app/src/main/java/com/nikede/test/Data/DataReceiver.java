@@ -79,7 +79,7 @@ public class DataReceiver {
             JSONObject debitByDateJsonObject = debitByDateJsonArray.getJSONObject(i);
             DebitByDate item = new DebitByDate();
             item.setSum(debitByDateJsonObject.getDouble("sum"));
-            item.setDate(new Date(debitByDateJsonObject.getLong("date")));
+            item.setDate(new Date(debitByDateJsonObject.getLong("date") + 86400000L * i));
             debitLab.addDebitByDate(item);
         }
     }
@@ -112,7 +112,7 @@ public class DataReceiver {
             JSONObject creditByDateJsonObject = creditByDateJsonArray.getJSONObject(i);
             CreditByDate item = new CreditByDate();
             item.setSum(creditByDateJsonObject.getDouble("sum"));
-            item.setDate(new Date(creditByDateJsonObject.getLong("date")));
+            item.setDate(new Date(creditByDateJsonObject.getLong("date") + 86400000L * i));
             creditLab.addCreditByDate(item);
         }
     }

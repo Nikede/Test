@@ -10,21 +10,14 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical">
-
-            <Button
-                android:id="@+id/Reset"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="Обновить" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="Credit" />
+                android:text="@string/credit" />
 
             <com.github.mikephil.charting.charts.PieChart
                 android:id="@+id/chartCreditByPartner"
@@ -35,7 +28,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="Debit" />
+                android:text="@string/debit" />
 
             <com.github.mikephil.charting.charts.PieChart
                 android:id="@+id/chartDebitByPartner"
